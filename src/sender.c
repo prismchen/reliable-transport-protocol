@@ -55,12 +55,27 @@ int main(int argc, char *argv[])
 
 	// send file to receiver
 	char buf[256];
+	int is_filename_sent = 0;
 	while (fgets(buf, 256, fd) != NULL) 
 	{
-		if ((numbytes = sendto(sockfd, buf, strlen(buf), 0,
-			 p->ai_addr, p->ai_addrlen)) == -1) {
-		perror("sender: sendto");
-		exit(1);
+		if (!is_filename_sent) 
+		{
+			if ((numbytes = sendto(sockfd, argv[2], strlen(argv[2]), 0, 
+				p->ai_addr, p->ai_addrlen)) == -1) 
+			{
+				perror("sender: sendto");
+				exit(1);
+			}
+			is_filename_sent = 1;
+		}
+		else 
+		{
+			if ((numbytes = sendto(sockfd, buf, strlen(buf), 0, 
+				p->ai_addr, p->ai_addrlen)) == -1) 
+			{
+				perror("sender: sendto");
+				exit(1);
+			}
 		}
 		numbytes_total += numbytes;
 	}
