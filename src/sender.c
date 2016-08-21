@@ -10,21 +10,26 @@
 #include <netdb.h>
 
 #define SERVERPORT "4950"	// the port users will be connecting to
+#define MAXBUFLEN 256
 
-int main(int argc, char *argv[])
-{
-	int sockfd;
-	struct addrinfo hints, *servinfo, *p;
-	int rv;
-	int numbytes;
-	int numbytes_total = 0;
+int get_file_size(const char* filename);
+int buf_send(char *buf);
+
+int sockfd;
+struct addrinfo hints, *servinfo, *p;
+int rv;
+
+int main(int argc, char *argv[]) {
 
 	if (argc != 3) {
 		fprintf(stderr,"usage: sender hostname filename\n");
 		exit(1);
 	}
 
-	// open file
+	int numbytes; // number of bytes sent each UDP packet
+	int numbytes_total = get_file_size(argv[2]); // number of bytes in file
+	char buf[MAXBUFLEN];
+	int numbytes_sent = 0; // number of bytes actually sent 
 	FILE *fd;
 	fd = fopen(argv[2], "r");
 
@@ -53,38 +58,50 @@ int main(int argc, char *argv[])
 		return 2;
 	}
 
-	// send file to receiver
-	char buf[256];
-	int is_filename_sent = 0;
-	while (fgets(buf, 256, fd) != NULL) 
-	{
-		if (!is_filename_sent) 
-		{
-			if ((numbytes = sendto(sockfd, argv[2], strlen(argv[2]), 0, 
-				p->ai_addr, p->ai_addrlen)) == -1) 
-			{
-				perror("sender: sendto");
-				exit(1);
-			}
-			is_filename_sent = 1;
-		}
-		else 
-		{
-			if ((numbytes = sendto(sockfd, buf, strlen(buf), 0, 
-				p->ai_addr, p->ai_addrlen)) == -1) 
-			{
-				perror("sender: sendto");
-				exit(1);
-			}
-		}
-		numbytes_total += numbytes;
+	// Send file name to receiver 
+
+	buf_send(argv[2]);
+
+	// Send number of bytes to receiver
+	snprintf(buf, MAXBUFLEN, "%d", numbytes_total);
+	buf_send(buf);
+
+	
+	while (fgets(buf, MAXBUFLEN, fd) != NULL) {
+		numbytes = buf_send(buf);
+		// printf("%s", buf);
+		// printf("sent %d bytes\n", numbytes);
+		numbytes_sent += numbytes;
 	}
 
 	freeaddrinfo(servinfo);
 
-	printf("sender: sent %d bytes to %s\n", numbytes_total, argv[1]);
+	printf("sender: sent %d bytes to %s\n", numbytes_sent, argv[1]);
+	
 	close(sockfd);
-
 	fclose(fd);
 	return 0;
 }
+
+int get_file_size(const char* filename) {
+	int size;
+	FILE *f;
+
+	f = fopen(filename, "rb");
+	if (f == NULL) return -1;
+    fseek(f, 0, SEEK_END);
+    size = ftell(f);
+    fclose(f);
+
+    return size;
+}
+
+int buf_send(char *buf) {
+	int numbytes;
+	if ((numbytes = sendto(sockfd, buf, strlen(buf), 0, 
+		p->ai_addr, p->ai_addrlen)) == -1) {
+		perror("sender: sendto");
+		exit(1);
+	}
+	return numbytes;
+} 

@@ -10,29 +10,26 @@
 #include <netdb.h>
 
 #define MYPORT "4950"	// the port users will be connecting to
+#define MAXBUFLEN 256
 
-#define MAXBUFLEN 100
+void *get_in_addr(struct sockaddr *sa);
+int buf_recv(char *buf); 
 
-// get sockaddr, IPv4 or IPv6:
-void *get_in_addr(struct sockaddr *sa)
-{
-	if (sa->sa_family == AF_INET) {
-		return &(((struct sockaddr_in*)sa)->sin_addr);
-	}
 
-	return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
+int sockfd;
+struct addrinfo hints, *servinfo, *p;
+int rv;
+struct sockaddr_storage their_addr;
+socklen_t addr_len;
 
-int main(void)
-{
-	int sockfd;
-	struct addrinfo hints, *servinfo, *p;
-	int rv;
+
+int main(void) {
+
 	int numbytes;
-	struct sockaddr_storage their_addr;
+	int numbytes_total;
+	int numbytes_recved = 0;
 	char buf[MAXBUFLEN];
-	socklen_t addr_len;
-	char s[INET6_ADDRSTRLEN];
+	FILE *fd;
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
@@ -72,19 +69,48 @@ int main(void)
 
 	addr_len = sizeof their_addr;
 
-	for (;;) {
+	// receive file name
+	buf_recv(buf);
+	fd = fopen(buf, "w");
 
-		if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN-1 , 0,
-			(struct sockaddr *)&their_addr, &addr_len)) == -1) {
-			perror("recvfrom");
-			exit(1);
+	// receive number of bytes
+	buf_recv(buf);
+	numbytes_total = atoi(buf);
+
+	for (;;) {
+		if (numbytes_recved >= numbytes_total) {
+			break;
 		}
-		buf[numbytes] = '\0';
-		printf("%s", buf);
+		numbytes = buf_recv(buf);
+		numbytes_recved += numbytes;
+		
+		// printf("%s", buf);
+		fprintf(fd, "%s", buf);
+		// printf("Received %d bytes\n", numbytes);
 	}
-	
+
+	printf("Received %d bytes in total\n", numbytes_recved);
 
 	close(sockfd);
-
+	fclose(fd);
 	return 0;
+}
+
+void *get_in_addr(struct sockaddr *sa) { // get sockaddr, IPv4 or IPv6:
+	if (sa->sa_family == AF_INET) {
+		return &(((struct sockaddr_in*)sa)->sin_addr);
+	}
+
+	return &(((struct sockaddr_in6*)sa)->sin6_addr);
+}
+
+int buf_recv(char *buf) {
+	int numbytes;
+	if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN , 0,
+		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
+		perror("recvfrom");
+		exit(1);
+	}
+	buf[numbytes] = '\0';
+	return numbytes;
 }

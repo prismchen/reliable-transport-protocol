@@ -1,0 +1,631 @@
+<html>
+<head>
+<link rel="alternate" type="application/rss+xml" title="RSS" href="http://feeds2.feedburner.com/Cprogrammingcom/">
+<link rel="stylesheet" href="http://static.cprogramming.com/main_images/style.css?np9" type="text/css">
+<!--[if IE]>
+    <link rel="stylesheet" href="http://static.cprogramming.com/main_images/style-ie.css?np4" type="text/css">
+<![endif]-->
+
+
+<META NAME="keywords" CONTENT="C++ programming, C programming, C file I/O, C files, files in C, dealing with I/O, I/O in C, input output in C, file input in C, file output, file output in C, file I/O tutorial, C file tutorial, C tutorial">
+<META NAME="Description" CONTENT="A tutorial covering file I/O in C, including how to work with binary files.">
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
+<title>C File I/O Tutorial - Cprogramming.com</title>
+
+<!-- ADDED DFP -->
+<script type='text/javascript' src='http://partner.googleadservices.com/gampad/google_service.js'>
+</script>
+<script type='text/javascript'>
+GS_googleAddAdSenseService("ca-pub-2560316224908115");
+GS_googleEnableAllServices();
+</script>
+<script type='text/javascript'>
+GA_googleAddSlot("ca-pub-2560316224908115", "RunOfSite_LargeRectangle_ATF_336x280");
+GA_googleAddSlot("ca-pub-2560316224908115", "RunOfSite_ATF_leaderboard_728x90");
+
+GA_googleAddSlot("ca-pub-2560316224908115", "RunOfSite_ATF_skyscraper_160x600");
+
+</script>
+<script type='text/javascript'>
+GA_googleFetchAds();
+</script>
+<!-- END ADDED DFP -->
+
+
+<script type="text/javascript">
+
+  var _gaq = _gaq || [];
+  _gaq.push(['_setAccount', 'UA-7820175-1']);
+  _gaq.push(['_setDomainName', '.cprogramming.com']);
+  _gaq.push(['_setAllowLinker', true]);
+  _gaq.push(['_trackPageview']);
+
+  (function() {
+    var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+    ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+    var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+  })();
+
+</script>
+
+
+</head>
+
+<body>
+<div>
+
+<a href="http://www.cprogramming.com/"><img class="logo noprint" src="http://static.cprogramming.com/main_images/title.png" width="324" height="83" border="0"></a> 
+
+<table class="line noprint"><tr><td></td></tr></table>
+<div class="noprint" align="right" style="padding-top:25px;padding-right:25px;">
+<!-- SiteSearch Google -->
+<form action="http://www.google.com/cse" id="cse-search-box">
+  <div>
+    <input type="hidden" name="cx" value="partner-pub-2560316224908115:wqvdce-aw4a" />
+    <input type="hidden" name="ie" value="ISO-8859-1" />
+    <input type="text" name="q" size="31" />
+    <input type="submit" name="sa" value="Search" />
+  </div>
+</form>
+<script type="text/javascript" src="http://www.google.com/cse/brand?form=cse-search-box&amp;lang=en"></script>
+<!-- SiteSearch Google -->
+</div>
+<div>
+  <table class="main">
+    <tr>
+
+  	<td class="noprint" colspan="5" bgcolor="#EBEBEB">
+  		<img src="http://static.cprogramming.com/main_images/spacer-vert.png" height="6" width="0">
+  	   <center>
+    	<div class="leaderboard">
+
+<!-- ADDED DFP -->
+<!-- ca-pub-2560316224908115/Homepage_ATF_leaderboard_728x90 -->
+<script type='text/javascript'>
+GA_googleFillSlot("RunOfSite_ATF_leaderboard_728x90");
+</script>
+<!-- END ADDED DFP -->
+
+</div>
+		</center>
+		<img src="http://static.cprogramming.com/main_images/spacer-vert.png" height="4" width="1">
+  	</td>
+        
+  </tr>
+
+  <tr>
+
+     <td class="noprint" width="130" valign="top" bgcolor="#EBEBEB"> 
+     <div class="menu" valign="top" style="font-size:14px;width:200px">
+     <p class="navcategory" align="left">
+          <img class="bullet" src="http://static.cprogramming.com/main_images/bullet.gif" width="11" height="14">    Starting out
+     </p>
+
+     <p class="navlist" align="left" style="font-size:14px;">
+             <a href="http://www.cprogramming.com/c++book/?inl=sb">Get the Ebook</a><br>
+             <a href="http://www.cprogramming.com/begin.html">Get Started with C or C++</a><br>
+             <a href="http://www.cprogramming.com/compilers.html">Getting a Compiler</a><br>
+             <a href="http://www.cprogramming.com/books.html">Book Recommendations</a><br>
+     </p>
+
+     <p class="navcategory" align="left">
+          <br>
+          <img class="bullet" src="http://static.cprogramming.com/main_images/bullet.gif" width="11" height="14"> Tutorials
+     </p>
+
+     <p class="navlist" align="left" style="font-size:14px;">
+            <a href=http://www.cprogramming.com/tutorial/c-tutorial.html>C Tutorial</a><br>
+            <a href=http://www.cprogramming.com/tutorial/c++-tutorial.html>C++ Tutorial</a><br>
+            <a href=http://www.cprogramming.com/java-programming.html>Java Tutorial</a><br>
+            <a href=http://www.cprogramming.com/game-programming.html>Game Programming</a><br>
+            <a href=http://www.cprogramming.com/graphics-programming.html>Graphics Programming</a><br>
+            <a href=http://www.cprogramming.com/algorithms-and-data-structures.html>Algorithms &amp; Data Structures</a><br>
+            <a href=http://www.cprogramming.com/debuggers.html>Debugging</a><br>
+            <a href="http://www.cprogramming.com/tutorial.html">All Tutorials</a><br>
+     </p>
+
+     <p class="navcategory" align="left">
+          <br>
+          <img class="bullet" src="http://static.cprogramming.com/main_images/bullet.gif" width="11" height="14"> Practice
+     </p>
+
+     <p class="navlist" align="left" style="font-size:14px;">
+            <a href="http://www.cprogramming.com/challenge.html">Practice Problems</a><br>
+            <a href="http://www.cprogramming.com/quiz/">Quizzes</a><br>
+     </p>
+     <p class="navcategory" align="left">
+          <br>
+          <img class="bullet" src="http://static.cprogramming.com/main_images/bullet.gif" width="11" height="14"> Resources
+     </p>
+
+     <p class="navlist" align="left" style="font-size:14px;">
+            <a href="http://www.cprogramming.com/cgi-bin/source/source.cgi">Source Code</a><br>
+            <a href=http://www.cprogramming.com/snippets/>Source Code Snippets</a><br>
+            <a href="http://www.cprogramming.com/tips/">C and C++ Tips</a><br>
+            <a href=http://www.cprogramming.com/jobs/>Finding a Job</a>
+     </p>
+
+     <p class="navcategory" align="left">
+          <br>
+          <img class="bullet" src="http://static.cprogramming.com/main_images/bullet.gif" width="11" height="14"> References
+     </p>
+
+     <p class="navlist" align="left" style="font-size:14px;">
+            <a href="http://www.cprogramming.com/function.html">Function Reference</a><br>
+            <a href="http://www.cprogramming.com/reference/">Syntax Reference</a><br>
+            <a href="http://faq.cprogramming.com/cgi-bin/smartfaq.cgi">Programming FAQ</a><br>
+     </p>
+
+     <p class="navcategory" align="left">
+          <br>
+          <img class="bullet" src="http://static.cprogramming.com/main_images/bullet.gif" width="11" height="14"> Getting Help
+     </p>
+
+     <p class="navlist" align="left" style="font-size:14px;">
+             <a href="http://www.cprogramming.com/board.html">Message Board</a><br>
+             <a href="http://www.cprogramming.com/email.html">Email</a><br>
+             <a href="http://www.cprogramming.com/about.html">About Us</a>
+     </p>
+     </div>
+
+<center>
+      <br><br>
+     <script type="text/javascript"><!--
+     google_ad_client = "pub-2560316224908115";
+     google_ad_width = 120;
+     google_ad_height = 90;
+     google_ad_format = "120x90_0ads_al";
+     google_ad_channel ="0800879710";
+     google_color_border = "EBEBEB";
+     google_color_bg = "EBEBEB";
+     google_color_link = "C30000";
+     google_color_url = "C30000";
+     google_color_text = "000000";
+     //--></script>
+     <script type="text/javascript"
+       src="http://pagead2.googlesyndication.com/pagead/show_ads.js">
+       </script>
+</center>
+
+
+
+    </td>
+	<td class="content" valign="top">
+
+    			<div class="content2">
+
+<h1>C File I/O and Binary File I/O</h1>
+
+<div style="margin-right: 1em; float:left; padding: .4em; border-right: 1px solid #bbb"><img src=http://static.cprogramming.com/main_images/alex-50-50.jpg border=0 style="padding: 0.25em;"><br><a href=https://plus.google.com/113987539774523532573?rel=author> By Alex Allain</a></div>
+
+<p>In this tutorial, you'll learn how to do file IO, text and binary, in C, using <b>fopen</b>, <b>fwrite</b>, and <b>fread</b>, <b>fprintf</b>, <b>fscanf</b>, <b>fgetc</b> and <b>fputc</b>.</p>
+
+<h2>FILE *</h2>
+<p>For C File I/O you need to use a FILE pointer, which will let the program
+keep track of the file being accessed. (You can think of it as the memory
+address of the file or the location of the file).  <br><br></p>
+<center> <div class='noprint'>
+<!-- RunOfSite_LargeRectangle_ATF_336x280 -->
+<script type='text/javascript'>
+GA_googleFillSlot('RunOfSite_LargeRectangle_ATF_336x280');
+</script>
+</div>
+
+
+</center>
+  <br><br>
+
+              For example:
+              <pre class="example">FILE *fp;</pre>
+<h2>fopen</h2>
+              To open a file you need to use the fopen function, which returns 
+              a FILE pointer. Once you've opened a file, you can use the FILE 
+              pointer to let the compiler perform input and output functions on 
+              the file.<br><pre class="example">FILE *fopen(const char *filename, const char *mode);</pre>
+              In the filename, if you use a string literal as the argument,
+              you need to remember to use double backslashes rather than a
+              single backslash as you otherwise risk an escape character such
+              as \t. Using double backslashes \\ escapes the \ key, so the
+              string works as it is expected.  Your users, of course, do not
+              need to do this!  It's just the way quoted strings are handled
+              in C and C++.
+
+<h3>fopen modes</h3>
+
+              The allowed modes for fopen are as follows:
+            <pre class="example">r  - open for reading
+w  - open for writing (file need not exist)
+a  - open for appending (file need not exist)
+r+ - open for reading and writing, start at beginning
+w+ - open for reading and writing (overwrite file)
+a+ - open for reading and writing (append if file exists)</pre>
+
+            Note that it's possible for fopen to fail even if your program is
+            perfectly correct: you might try to open a file specified by the
+            user, and that file might not exist (or it might be
+            write-protected).  In those cases, fopen will return 0, the NULL
+            pointer.
+            <br><br>
+              Here's a simple example of using fopen:<br><pre class="example">
+FILE *fp;
+fp=fopen("c:\\test.txt", "r");</pre>
+              This code will open test.txt for reading in text mode. To open a 
+              file in a binary mode you must add a b to the end of the mode string; 
+              for example, "rb" (for the reading and writing modes, 
+              you can add the b either after the plus sign - "r+b" - 
+              or before - "rb+")
+<h2>fclose</h2>
+When you're done working with a file, you should close it using the function<br><pre class="example">int fclose(FILE *a_file);</pre>
+              fclose returns zero if the file is closed successfully.<br><br>
+              An example of fclose is 
+              <pre class="example">fclose(fp);</pre>
+
+<h2>Reading and writing with fprintf, fscanf fputc, and fgetc</h2>
+              To work with text input and output, you use fprintf and fscanf,
+              both of which are similar to their friends <a href=http://www.cprogramming.com/tutorial/printf-format-strings.html>printf</a> and <a href=http://www.cprogramming.com/tips/tip/the-power-of-scanf>scanf</a>
+              except that you must pass the FILE pointer as first argument.
+              For example:<br><pre class="example">
+FILE *fp;
+fp=fopen("c:\\test.txt", "w");
+fprintf(fp, "Testing...\n");</pre>
+
+It is also possible to read (or write) a single character at a time--this can
+be useful if you wish to perform character-by-character input (for instance,
+if you need to keep track of every piece of punctuation in a file it would
+make more sense to read in a single character than to read in a string at a
+time.)  The fgetc function, which takes a file pointer, and returns an int,
+will let you read a single character from a file:
+
+<pre class="example">
+int fgetc (FILE *fp);
+</pre>
+
+Notice that fgetc returns an int.  What this actually means is that when it
+reads a normal character in the file, it will return a value suitable for
+storing in an unsigned char (basically, a number in the range 0 to 255).  On
+the other hand, when you're at the very end of the file, you can't get a
+character value--in this case, fgetc will return "EOF", which is a constant that
+indicates that you've reached the end of the file.  To see a full example
+using fgetc in practice, take a look at the example <a href="c/lesson14.html">here</a>.
+<br><br>
+The fputc function allows you to write a character at a time--you might find
+this useful if you wanted to copy a file character by character.  It looks
+like this:
+
+<pre class="example">
+int fputc( int c, FILE *fp );
+</pre>
+
+Note that the first argument should be in the range of an unsigned char so
+that it is a valid character.  The second argument is the file to write to.
+On success, fputc will return the value c, and on failure, it will return EOF.
+<h2>Binary file I/O - fread and fwrite</h2>
+
+              For binary File I/O you use fread and fwrite.<br><br>
+              The declarations for each are similar:
+              <pre class="example">
+size_t fread(void *ptr, size_t size_of_elements, size_t number_of_elements, FILE *a_file);
+              
+size_t fwrite(const void *ptr, size_t size_of_elements, size_t number_of_elements, FILE *a_file);</pre>
+              Both of these functions deal with blocks of memories - usually
+              arrays.  Because they accept pointers, you can also use these
+              functions with other data structures; you can even write structs
+              to a file or a read struct into memory.<br><br>
+              Let's look at one function to see how the notation works.<br><br>
+              fread takes four arguments. Don't be confused by the declaration 
+              of a void *ptr; void means that it is a pointer that can be used 
+              for any type variable. The first argument is the name of the array 
+              or the address of the structure you want to write to the file. The 
+              second argument is the size of each element of the array; it is 
+              in bytes. For example, if you have an array of characters, you would 
+              want to read it in one byte chunks, so size_of_elements is one. 
+              You can use the sizeof operator to get the size of the various datatypes; 
+              for example, if you have a variable int x; you can get the size 
+              of x with sizeof(x);. This usage works even for structs or arrays. 
+              E.g., if you have a variable of a struct type with the name a_struct, 
+              you can use sizeof(a_struct) to find out how much memory it is taking 
+              up.<br><br>
+              e.g., <br><pre class="example">sizeof(int);</pre>
+              <br>
+              The third argument is simply how many elements you want to read 
+              or write; for example, if you pass a 100 element array, you want 
+              to read no more than 100 elements, so you pass in 100.<br><br>
+              The final argument is simply the file pointer we've been using. 
+              When fread is used, after being passed an array, fread will read 
+              from the file until it has filled the array, and it will return 
+              the number of elements actually read. If the file, for example, 
+              is only 30 bytes, but you try to read 100 bytes, it will return 
+              that it read 30 bytes. To check to ensure the end of file was reached, 
+              use the feof function, which accepts a FILE pointer and returns 
+              true if the end of the file has been reached.<br><br>
+              fwrite is similar in usage, except instead of reading into the memory 
+              you write from memory into a file.<br><br>
+              For example,
+              <pre class="example">
+FILE *fp;
+fp=fopen("c:\\test.bin", "wb");
+char x[10]="ABCDEFGHIJ";
+fwrite(x, sizeof(x[0]), sizeof(x)/sizeof(x[0]), fp);</pre>
+<br><a href="c/quiz/quiz10.html">Quiz yourself</a>
+<br><a href="c/lesson9.html">Previous: Strings</a>
+<br><a href="c/lesson11.html">Next: Typecasting</a>
+<br><a href="http://www.cprogramming.com/tutorial/c-tutorial.html">Back to C Tutorial Index</a>
+
+ <br><br>
+<b>Related articles</b>
+<br><br>
+<a href=http://faq.cprogramming.com/cgi-bin/smartfaq.cgi?answer=1048384537&id=1043284392>More on working with files in C</a>
+<br><br>
+<a href=http://www.cprogramming.com/tutorial/lesson10.html>C++ file IO</a>
+
+<div id="footer" class="noprint">
+
+<div id="social" style="margin-top:5px;height:23px;">
+<table>
+<tr>
+<td> 
+<div id="fb-root"></div>
+<div id="fb-recommend" class="fb-like" data-send="false" data-width="120" data-height="21" data-layout="button_count" data-action="recommend"></div>
+</td>
+<td>
+<a class="twitter-share-button" data-count="horizontal" data-via="alexallain"></a>
+</td>
+<td>
+<div class="g-plusone" data-size="medium"></div>
+</td>
+</tr>
+</table>
+</div>
+
+<div style="font-size:14px;padding:10px;margin-top:5px;margin-bottom:5px;">
+<div style="width:400px; margin-top:10px; float:left; margin-bottom: 15px;">
+    <div id="old-ad" style="display:none">
+    <a href=http://www.cprogramming.com/c++book/?inl=ft-nhp><img src=http://www.cprogramming.com/c++book/small_3d.jpg border=0 align="left"></a><a href="http://www.cprogramming.com/c++book/?inl=ft-nhp">Want to become a C++ programmer? The Cprogramming.com ebook, Jumping into C++, will walk you through it, step-by-step. Get Jumping into C++ today!</a>
+    </div>
+    <div id="new-ad" style="display:none" onmousedown="window.location.href='http://www.cprogramming.com/c++book/?inl=ft-na'">
+    <object width="336" height="280"><param name="bottom-ad" value="http://www.cprogramming.com/c++book/336x280.swf"><param name="wmode" value="transparent" /><embed wmode=transparent allowfullscreen="true" allowscriptaccess="always"  src="http://www.cprogramming.com/c++book/336x280.swf" width="336" height="280"></embed></object>
+    </div>
+</div>
+<div style="clear: both"></div>
+
+
+<script>
+function abTest(element_name_sets) {
+    var element_to_show;
+    var element_count = element_name_sets.length;
+    var i;
+    for ( i = 0; i < element_count; i++ )
+    {
+        if ( Math.random() <= 1 / ( element_count - i ) ) {
+                break;
+        }
+    }
+    var element_name_set = element_name_sets[ i ];
+    for ( i = 0; i < element_name_set.length; i++ )
+    {
+        element_to_show = document.getElementById( element_name_set[ i ] );
+        element_to_show.style.display = "block";
+    }
+}
+abTest( [["old-ad", "old-ad-text"]] );
+</script>
+
+<b>Popular pages</b>
+<ul>
+ <li><a href=http://www.cprogramming.com/begin.html>Exactly how to get started with C++ (or C) today</a> 
+<li><a href=http://www.cprogramming.com/tutorial/c-tutorial.html>C Tutorial</a>
+<li><a href=http://www.cprogramming.com/tutorial/c++-tutorial.html>C++ Tutorial</a>
+<li><a href=http://www.cprogramming.com/how_to_learn_to_program.html>5 ways you can learn to program faster</a> 
+<li><a href=http://www.cprogramming.com/beginner_programming_mistakes.html>The 5 Most Common Problems New Programmers Face</a>
+<li><a href=http://www.cprogramming.com/code_blocks/>How to set up a compiler</a>
+<li><a href=http://www.cprogramming.com/tutorial/common.html>8 Common programming Mistakes</a> 
+<li><a href=http://www.cprogramming.com/c++11/what-is-c++0x.html>What is C++11?</a>
+<li><a href=http://www.cprogramming.com/tutorial/game_programming/same_game_part1.html>How to make a game in 48 hours</a>
+</ul>
+
+<b>Recent additions</b> <a href="http://feeds2.feedburner.com/Cprogrammingcom" rel="alternate" type="application/rss+xml"><img src="http://www.feedburner.com/fb/images/pub/feed-icon16x16.png" alt="subscribe to a feed" style="border:0" width="16" height="16"></img></a>
+<ul>
+<li><a href=http://www.cprogramming.com/tutorial/shared-libraries-linux-gcc.html>How to create a shared library on Linux with GCC</a> - December 30, 2011</li>
+<li> <a href="http://www.cprogramming.com/c++11/c++11-nullptr-strongly-typed-enum-class.html">Enum classes and nullptr in C++11</a> - November 27, 2011</li>
+<li><a href="http://www.cprogramming.com/tutorial/computersciencetheory/hash-table.html">Learn about The Hash Table</a> - November 20, 2011</li>
+<li><a href="http://www.cprogramming.com/c++11/rvalue-references-and-move-semantics-in-c++11.html">Rvalue References and Move Semantics in C++11</a> - November 13, 2011</li>
+<li><a href="http://www.cprogramming.com/java/c-and-c++-for-java-programmers.html">C and C++ for Java Programmers</a> - November 5, 2011</li>
+<li><a href="http://www.cprogramming.com/tutorial/c++-iostreams.html">A Gentle Introduction to C++ IO Streams</a> - October 10, 2011</li>
+</ul>
+</div>
+<div id="ld-6395-8166"></div><script>(function(w,d,s,i){w.ldAdInit=w.ldAdInit||[];w.ldAdInit.push({slot:8338751818573927,size:[0, 0],id:"ld-6395-8166"});if(!d.getElementById(i)){var j=d.createElement(s),p=d.getElementsByTagName(s)[0];j.async=true;j.src="//cdn2.lockerdome.com/_js/ajs.js";j.id=i;p.parentNode.insertBefore(j,p);}})(window,document,"script","ld-ajs");</script>
+
+<style type="text/css">
+@import url(http://www.google.com/cse/api/branding.css);
+</style>
+<div class="cse-branding-bottom" style="background-color:#FFFFFF;color:#000000;width:50%; margin:auto">
+  <div class="cse-branding-form">
+    <form action="http://www.google.com/cse" id="cse-search-box">
+      <div>
+        <input type="hidden" name="cx" value="partner-pub-2560316224908115:0581759109" />
+        <input type="hidden" name="ie" value="UTF-8" />
+        <input type="text" name="q" size="55" />
+        <input type="submit" name="sa" value="Search" />
+      </div>
+    </form>
+  </div>
+  <div class="cse-branding-logo">
+    <img src="http://www.google.com/images/poweredby_transparent/poweredby_FFFFFF.gif" alt="Google" />
+  </div>
+  <div class="cse-branding-text">
+    Custom Search
+  </div>
+</div>
+
+
+<center>
+<div style="margin-top:20px; margin-bottom: 20px">
+<script type="text/javascript">
+<!--
+google_ad_client = "pub-2560316224908115";
+/* link_ads_bottom */
+google_ad_slot = "2258412831";
+google_ad_width = 728;
+google_ad_height = 15;
+//-->
+</script> 
+<script type="text/javascript" src="http://pagead2.googlesyndication.com/pagead/show_ads.js"> </script> 
+</div>
+ 
+<script type="text/javascript" src="http://forms.aweber.com/form/12/618210012.js"></script>
+
+<div class="footer-links" style="padding:10px">
+<a href="http://www.cprogramming.com/advertising.html">Advertising</a> | <a href="http://www.cprogramming.com/privacy.html">Privacy policy</a> |
+<a href="http://www.cprogramming.com/use.html">Copyright © 1997-2011 Cprogramming.com. All rights reserved.</a> | <a href=mailto:webmaster@cprogramming.com>webmaster@cprogramming.com</a>
+</div>
+</div>
+</div>
+</td>
+    	
+
+
+<td class="content noprint" valign="top" rowspan="1" bgcolor="#EBEBEB">
+<div class="content2"><br><div class="verticalad">
+
+
+
+
+<script type='text/javascript'>
+GA_googleFillSlot("RunOfSite_ATF_skyscraper_160x600");
+</script>
+
+
+
+
+
+
+</div><br>
+
+<style type="text/css">
+.sidebar-box { width: 150px; margin-bottom:5px; }
+</style>
+    <div id="side-images">
+        <div style="padding:5px;margin-top:5px">
+            <div style="margin-bottom: 5px">
+                <b>Popular pages</b>
+            </div>
+            <div>
+                
+                <!--http://www.flickr.com/photos/baslow/5620208/sizes/o/in/photostream/ -->
+                <div class = "sidebar-box">
+                    <a href=http://www.cprogramming.com/tutorial/c-tutorial.html>
+                    <img src=http://static.cprogramming.com/main_images/footer/5620208_bff9c514e6_s.jpg border=0 height=75 width=75 alt="C tutorial">
+                    <br>
+                    C Tutorial
+                    </a>
+                </div>
+                
+
+                
+                <!--http://www.flickr.com/photos/29233640@N07/2855530649/sizes/sq/in/photostream/-->
+                <div class = "sidebar-box">
+                    <a href=http://www.cprogramming.com/begin.html>
+                    <img src=http://static.cprogramming.com/main_images/footer/2855530649_905f7862fd_s.jpg border=0 height=75 width=75 alt="Get started">
+                    <br>
+                    Exactly how to get started with C++ (or C) today</a>
+                </div>
+                
+
+                
+                <!--http://www.flickr.com/photos/mikecogh/6505012533/sizes/sq/in/photostream/-->
+                <div class = "sidebar-box">
+                    <a href=http://www.cprogramming.com/how_to_learn_to_program.html>
+                    <img src=http://static.cprogramming.com/main_images/footer/6505012533_55c83fdfa0_s.jpg border=0 height=75 width=75 alt="Learn to program">
+                    <br>
+                    5 ways you can learn to program faster</a>
+                </div>
+                
+
+                
+                <div class = "sidebar-box">
+                    <a href=http://www.cprogramming.com/tutorial/c++-tutorial.html>
+                    <img src=http://static.cprogramming.com/main_images/footer/c++-img.png border=0 height=75 width=75 alt="C++ tutorial">
+                    <br>
+                    C++ Tutorial</a>
+                </div>
+                
+
+                
+                <!--http://www.flickr.com/photos/giopuo/3441263816/sizes/sq/in/photostream/-->
+                <div class = "sidebar-box">
+                    <a href=http://www.cprogramming.com/beginner_programming_mistakes.html>
+                    <img src=http://static.cprogramming.com/main_images/footer/3441263816_95f132a884_s.jpg border=0 height=75 width=75 alt="Problems new programmers face">
+                    <br>
+                    The 5 Most Common Problems New Programmers Face</a>
+                </div>
+                
+
+                
+                <div class = "sidebar-box">
+                   <a href=http://www.cprogramming.com/tutorial/game_programming/same_game_part1.html>
+                    <img src=http://www.cprogramming.com/tutorial/game_programming/same_game_small.png border=0 height=42 width=42 alt="Learn to make a game">
+                    <br>
+                   How to make a game in 48 hours</a>
+                </div>
+                
+
+                
+                <div class = "sidebar-box">
+                   <a href=http://www.cprogramming.com/tutorial/common.html>
+                    <img src=http://static.cprogramming.com/main_images/footer/2291127824_087a497bea_s.jpg border=0 height=75 width=75 alt="Common problems">
+                    <br>
+                   8 Common Programming Mistakes</a>
+                </div>
+                
+
+                
+                <div class = "sidebar-box">
+                   <a href=http://www.cprogramming.com/c++11/what-is-c++0x.html>
+                    <img src=http://static.cprogramming.com/main_images/footer/c++11.png border=0 height=75 width=75 alt="C++11">
+                    <br>
+                   What is C++11?</a>
+                </div>
+                
+            </div>
+        </div>
+        <div style="display:block">
+            <a href=/image_credits.html>Image credits</a>
+        </div>
+    </div>
+</div>
+</td>  	
+
+</tr>
+</table>
+</div>
+
+
+<script>
+(function(w, d, s) {
+  var cur_url = window.location;
+  var loc = cur_url;
+  if ( /htm(l?)/.test( cur_url.pathname ) ) {
+    loc = cur_url.protocol + "//" + cur_url.host + cur_url.pathname.replace( /\+/g, "%2b" );
+  }
+  d.getElementById( "fb-recommend" ).setAttribute( "data-href", loc );
+  function go(){
+    var js, fjs = d.getElementsByTagName(s)[0], load = function(url, id) {
+          if (d.getElementById(id)) {return;}
+          js = d.createElement(s); js.src = url; js.id = id;
+          fjs.parentNode.insertBefore(js, fjs);
+        };
+    load('//connect.facebook.net/en_US/all.js#xfbml=1&channelUrl=http%3A%2F%2Fwww.cprogramming.com%2Ffb%2Fchannel.html', 'fbjssdk');
+    load('https://apis.google.com/js/plusone.js', 'gplus1js');
+    load('//platform.twitter.com/widgets.js', 'tweetjs');
+  }
+  if (w.addEventListener) { w.addEventListener("load", go, false); }
+  else if (w.attachEvent) { w.attachEvent("onload",go); }
+}(window, document, 'script'));
+</script>
+
+
+</body>
+</html>
+
+
+
