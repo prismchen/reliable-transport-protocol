@@ -8,66 +8,33 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <pthread.h>
 
-#define MYPORT "4950"	// the port users will be connecting to
-#define MAXBUFLEN 256
+#include "data_struct.h"
+#include "receiver_helper.h"
 
-void *get_in_addr(struct sockaddr *sa);
-int buf_recv(char *buf); 
+#define ARRAY_SIZE(x) sizeof x / sizeof ((*x))
 
-
+// extern-ed global variables
 int sockfd;
 struct addrinfo hints, *servinfo, *p;
 int rv;
 struct sockaddr_storage their_addr;
 socklen_t addr_len;
+FILE *fd;
 
+int file_size_in_bytes;
 
-int main(void) {
+void *recv_file_thread(void *param) {
 
-	int numbytes;
-	int numbytes_total;
 	int numbytes_recved = 0;
 	char buf[MAXBUFLEN];
-	FILE *fd;
 
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
-	hints.ai_socktype = SOCK_DGRAM;
-	hints.ai_flags = AI_PASSIVE; // use my IP
-
-	if ((rv = getaddrinfo(NULL, MYPORT, &hints, &servinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-		return 1;
+	int prepare_return;
+	if ((prepare_return = prepare()) != 0) {
+		perror("prepare failed");
+		exit(prepare_return);
 	}
-
-	// loop through all the results and bind to the first we can
-	for(p = servinfo; p != NULL; p = p->ai_next) {
-		if ((sockfd = socket(p->ai_family, p->ai_socktype,
-				p->ai_protocol)) == -1) {
-			perror("receiver: socket");
-			continue;
-		}
-
-		if (bind(sockfd, p->ai_addr, p->ai_addrlen) == -1) {
-			close(sockfd);
-			perror("receiver: bind");
-			continue;
-		}
-
-		break;
-	}
-
-	if (p == NULL) {
-		fprintf(stderr, "receiver: failed to bind socket\n");
-		return 2;
-	}
-
-	freeaddrinfo(servinfo);
-
-	printf("receiver: waiting to recvfrom...\n");
-
-	addr_len = sizeof their_addr;
 
 	// receive file name
 	buf_recv(buf);
@@ -75,42 +42,44 @@ int main(void) {
 
 	// receive number of bytes
 	buf_recv(buf);
-	numbytes_total = atoi(buf);
+	file_size_in_bytes = atoi(buf);
+	printf("Number of bytes expected to receive %d\n", file_size_in_bytes);
 
+	packet *pck;
 	for (;;) {
-		if (numbytes_recved >= numbytes_total) {
+		if (numbytes_recved >= file_size_in_bytes) {
 			break;
 		}
-		numbytes = buf_recv(buf);
-		numbytes_recved += numbytes;
+		pck = buf_recv_packet();
+
+		numbytes_recved += pck->packet_size;
 		
 		// printf("%s", buf);
-		fprintf(fd, "%s", buf);
+		fwrite(pck->data, 1, pck->packet_size, fd);
+		if (ferror(fd)) {
+			perror("Write error");
+			exit(4);
+		}
 		// printf("Received %d bytes\n", numbytes);
 	}
 
 	printf("Received %d bytes in total\n", numbytes_recved);
 
-	close(sockfd);
-	fclose(fd);
+	clean_up();
+
+	pthread_exit(0);
+}
+
+int main(void) {
+
+	pthread_t recv_tid;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
+
+	pthread_create(&recv_tid, &attr, recv_file_thread, NULL);
+
+	pthread_join(recv_tid, NULL);
+
 	return 0;
 }
 
-void *get_in_addr(struct sockaddr *sa) { // get sockaddr, IPv4 or IPv6:
-	if (sa->sa_family == AF_INET) {
-		return &(((struct sockaddr_in*)sa)->sin_addr);
-	}
-
-	return &(((struct sockaddr_in6*)sa)->sin6_addr);
-}
-
-int buf_recv(char *buf) {
-	int numbytes;
-	if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN , 0,
-		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
-		perror("recvfrom");
-		exit(1);
-	}
-	buf[numbytes] = '\0';
-	return numbytes;
-}

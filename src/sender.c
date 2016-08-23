@@ -8,100 +8,93 @@
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <netdb.h>
+#include <pthread.h>
 
-#define SERVERPORT "4950"	// the port users will be connecting to
-#define MAXBUFLEN 256
+#include "data_struct.h"
+#include "sender_helper.h"
 
-int get_file_size(const char* filename);
-int buf_send(char *buf);
 
+// extern-ed global variables
 int sockfd;
 struct addrinfo hints, *servinfo, *p;
 int rv;
+FILE *fd; // file descriptor of the transfering file
+char *filename;
 
-int main(int argc, char *argv[]) {
+int file_size_in_bytes;
+
+void *send_file_thread(void *param) {
+
+	char *ip = (char*) param;
+	char buf[MAXBUFLEN];
+	int numbytes_sent = 0; // number of bytes actually sent 
+
+	int prepare_return;
+	if ((prepare_return = connect_prepare(ip)) != 0) {
+		perror("connect_prepare failed");
+		exit(prepare_return);
+	}
+
+	// Send file name to receiver 
+
+	buf_send(filename);
+
+	// Send number of bytes to receiver
+	snprintf(buf, MAXBUFLEN, "%d", file_size_in_bytes);
+	buf_send(buf);
+
+	packet* pck = (packet*) malloc(MAX_UDP + HEADER_SIZE);
+
+	for (;;) {
+
+		memset(pck, '\0', MAX_UDP + HEADER_SIZE);
+
+		if (feof(fd)) {
+			break;
+		}
+
+		int numbytes_read = fread(pck->data, sizeof(char), MAX_UDP, fd);
+
+		if (ferror(fd)) {
+			perror("Read error");
+			exit(3);
+		}
+
+		pck->sequence_num = 0;
+		pck->packet_size = numbytes_read;
+		pck->file_size = file_size_in_bytes;
+
+		buf_send_packet(pck);
+
+		// printf("%s", buf);
+		// printf("sent %d bytes\n", numbytes);
+		numbytes_sent += numbytes_read;
+	}
+
+	printf("sender: sent %d bytes to %s\n", numbytes_sent, ip);
+
+	clean_up();
+
+	pthread_exit(0);
+}
+
+int main(int argc, char *argv[]) { // main function
 
 	if (argc != 3) {
 		fprintf(stderr,"usage: sender hostname filename\n");
 		exit(1);
 	}
 
-	int numbytes; // number of bytes sent each UDP packet
-	int numbytes_total = get_file_size(argv[2]); // number of bytes in file
-	char buf[MAXBUFLEN];
-	int numbytes_sent = 0; // number of bytes actually sent 
-	FILE *fd;
-	fd = fopen(argv[2], "r");
+	filename = argv[2];
+	file_size_in_bytes = get_file_size(argv[2]); // number of bytes in file
 
-	memset(&hints, 0, sizeof hints);
-	hints.ai_family = AF_UNSPEC;
-	hints.ai_socktype = SOCK_DGRAM;
+	pthread_t send_tid;
+	pthread_attr_t attr;
+	pthread_attr_init(&attr);
 
-	if ((rv = getaddrinfo(argv[1], SERVERPORT, &hints, &servinfo)) != 0) {
-		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-		return 1;
-	}
+	pthread_create(&send_tid, &attr, send_file_thread, argv[1]);
 
-	// loop through all the results and make a socket
-	for(p = servinfo; p != NULL; p = p->ai_next) {
-		if ((sockfd = socket(p->ai_family, p->ai_socktype,
-				p->ai_protocol)) == -1) {
-			perror("sender: socket");
-			continue;
-		}
-
-		break;
-	}
-
-	if (p == NULL) {
-		fprintf(stderr, "sender: failed to create socket\n");
-		return 2;
-	}
-
-	// Send file name to receiver 
-
-	buf_send(argv[2]);
-
-	// Send number of bytes to receiver
-	snprintf(buf, MAXBUFLEN, "%d", numbytes_total);
-	buf_send(buf);
-
+	pthread_join(send_tid, NULL);
 	
-	while (fgets(buf, MAXBUFLEN, fd) != NULL) {
-		numbytes = buf_send(buf);
-		// printf("%s", buf);
-		// printf("sent %d bytes\n", numbytes);
-		numbytes_sent += numbytes;
-	}
-
-	freeaddrinfo(servinfo);
-
-	printf("sender: sent %d bytes to %s\n", numbytes_sent, argv[1]);
-	
-	close(sockfd);
-	fclose(fd);
 	return 0;
 }
-
-int get_file_size(const char* filename) {
-	int size;
-	FILE *f;
-
-	f = fopen(filename, "rb");
-	if (f == NULL) return -1;
-    fseek(f, 0, SEEK_END);
-    size = ftell(f);
-    fclose(f);
-
-    return size;
-}
-
-int buf_send(char *buf) {
-	int numbytes;
-	if ((numbytes = sendto(sockfd, buf, strlen(buf), 0, 
-		p->ai_addr, p->ai_addrlen)) == -1) {
-		perror("sender: sendto");
-		exit(1);
-	}
-	return numbytes;
-} 
