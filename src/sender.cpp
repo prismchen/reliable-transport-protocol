@@ -9,10 +9,12 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <pthread.h>
+#include <map>
 
 #include "data_struct.h"
 #include "sender_helper.h"
 
+using namespace std;
 
 // extern-ed global variables
 int sockfd;
