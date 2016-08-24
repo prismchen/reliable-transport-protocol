@@ -1,10 +1,10 @@
 all: sender receiver
 
-sender: src/sender.c src/sender_helper.c 
-	gcc -o send_execute/sender src/sender.c src/sender_helper.c 
+sender: src/sender.cpp src/sender_helper.cpp 
+	g++ -o send_execute/sender src/sender.cpp src/sender_helper.cpp 
 
-receiver: src/receiver.c src/receiver_helper.c
-	gcc -o recv_execute/receiver src/receiver.c src/receiver_helper.c
+receiver: src/receiver.cpp src/receiver_helper.cpp
+	g++ -o recv_execute/receiver src/receiver.cpp src/receiver_helper.cpp
 
 clean:
-	rm send_execute/sender recv_execute/receiver
+	rm send_execute/sender recv_execute/*

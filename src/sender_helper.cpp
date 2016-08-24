@@ -18,6 +18,13 @@ extern int rv;
 extern FILE *fd;
 extern char *filename;
 
+extern long global_sequence_num;
+extern unsigned long ack_num;
+
+unsigned long *ack_buf = (unsigned long*) malloc(sizeof(unsigned long));
+struct sockaddr remote_addr;
+socklen_t remote_addr_len = sizeof remote_addr;
+
 int get_file_size(const char* filename) {
 	int size;
 	FILE *f;
@@ -46,6 +53,17 @@ void buf_send_packet(packet* pck) {
 		perror("sender: sendto");
 		exit(1);
 	}
+}
+
+unsigned long recv_ack() {
+	int recv_len;
+	recv_len = recvfrom(sockfd, ack_buf, sizeof ack_buf, 0, &remote_addr, &remote_addr_len);
+	if (recv_len != sizeof(unsigned long)) {
+		printf("%d\n", recv_len);
+		perror("recv_ack");
+		exit(1);
+	}
+	return *ack_buf;
 }
 
 int connect_prepare(char *ip) {

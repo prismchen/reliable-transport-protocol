@@ -19,6 +19,8 @@ extern struct sockaddr_storage their_addr;
 extern socklen_t addr_len;
 extern FILE *fd;
 
+extern unsigned long expected_sequence_num;
+
 void *get_in_addr(struct sockaddr *sa) { // get sockaddr, IPv4 or IPv6:
 	if (sa->sa_family == AF_INET) {
 		return &(((struct sockaddr_in*)sa)->sin_addr);
@@ -44,10 +46,26 @@ packet *buf_recv_packet() {
 
 	if (recvfrom(sockfd, pck, MAX_UDP + HEADER_SIZE , 0,
 		(struct sockaddr *)&their_addr, &addr_len) == -1) {
-		perror("recvfrom");
+		perror("buf_recv_packet");
 		exit(1);
 	}
 	return pck;
+}
+
+void send_ack() {
+	if (sendto(sockfd, &expected_sequence_num, sizeof expected_sequence_num, 0, (struct sockaddr *) &their_addr, addr_len) == -1) {
+		perror("send_ack");
+		exit(1);
+	}
+	printf("send ack %lu\n", expected_sequence_num);
+}
+
+void write_to_file(packet *pck) {
+	fwrite(pck->data, 1, pck->packet_size, fd);
+	if (ferror(fd)) {
+		perror("write_to_file");
+		exit(4);
+	}
 }
 
 int prepare() {
@@ -84,7 +102,7 @@ int prepare() {
 		return 2;
 	}
 
-	addr_len = sizeof their_addr;
+	addr_len = sizeof their_addr; // You must also initialize fromlen to be the size of from or struct sockaddr
 
 	printf("receiver: waiting to recvfrom...\n");
 

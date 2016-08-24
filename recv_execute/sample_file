@@ -1,3 +1,0 @@
-Use sprintf instead, itoa is not part of the C standard and it's probably not included in your stdlib implementation. Here are some random words.
-
-sprintf(word,"%d",i);
