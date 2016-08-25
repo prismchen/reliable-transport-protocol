@@ -18,7 +18,6 @@ extern int rv;
 extern FILE *fd;
 extern char *filename;
 
-extern long global_sequence_num;
 extern unsigned long ack_num;
 
 unsigned long *ack_buf = (unsigned long*) malloc(sizeof(unsigned long));

@@ -60,6 +60,8 @@ void *recv_file_thread(void *param) {
 			break;
 		}
 		pck = buf_recv_packet();
+
+		// printf("Received a packet with sequence_num %lu and size is %lu\n", pck->sequence_num, pck->packet_size);
 		if (pck->sequence_num == expected_sequence_num) {
 			write_buffer.insert(std::pair<unsigned long, packet*> (pck->sequence_num, pck));
 			last_writable_sequence_num = expected_sequence_num;
@@ -99,13 +101,12 @@ void *write_file_thread(void *param) {
 				}
 			}
 		}
-		// sleep(1);
-		// printf("first_writable_sequence_num is %lu\n", first_writable_sequence_num);
+		
 		if (first_writable_sequence_num == file_size_in_bytes) {
 			break;
 		}
 	} 
-	
+
 	printf("Reciver write_thread finished...\n");
 	pthread_exit(0);
 }

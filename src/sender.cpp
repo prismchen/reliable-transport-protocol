@@ -24,14 +24,17 @@ FILE *fd; // file descriptor of the transfering file
 char *filename;
 
 int file_size_in_bytes;
-unsigned long global_sequence_num = 0;
+// unsigned long global_sequence_num = 0;
+unsigned long first_sequence_num_notsent = 0;
+volatile unsigned long last_sequence_num_notsent = 0; 
 unsigned long ack_num = 0;
 std::map<unsigned long, packet*> read_buffer;
+
+volatile int send_start = 0;
 
 void *send_file_thread(void *param) {
 
 	char buf[MAXBUFLEN];
-	int numbytes_sent = 0; // number of bytes actually sent 
 
 	// Send file name to receiver 
 
@@ -41,37 +44,33 @@ void *send_file_thread(void *param) {
 	snprintf(buf, MAXBUFLEN, "%d", file_size_in_bytes);
 	buf_send(buf);
 
-	packet* pck = (packet*) malloc(MAX_UDP + HEADER_SIZE);
+	packet* pck;
+	std::map<unsigned long, packet*> :: iterator it;
 
 	for (;;) {
+		if(send_start) {
+			while (first_sequence_num_notsent <= last_sequence_num_notsent) {
+				it = read_buffer.find(first_sequence_num_notsent);
+				if (it != read_buffer.end()) {
+					pck = it->second;
+					buf_send_packet(pck);
+					first_sequence_num_notsent += pck->packet_size;
+				}
+				else {
+					perror("packet not found");
+					exit(1);
+				}
+				
+			}
+		}
 
-		memset(pck, '\0', MAX_UDP + HEADER_SIZE);
-
-		if (feof(fd)) {
+		if (first_sequence_num_notsent == file_size_in_bytes) {
 			break;
 		}
-
-		int numbytes_read = fread(pck->data, sizeof(char), MAX_UDP, fd);
-
-		if (ferror(fd)) {
-			perror("Read error");
-			exit(3);
-		}
-
-		pck->sequence_num = global_sequence_num;
-		pck->packet_size = numbytes_read;
-		pck->file_size = file_size_in_bytes;
-
-		global_sequence_num += numbytes_read;
-
-		buf_send_packet(pck);
-
-		// printf("%s", buf);
-		// printf("sent %d bytes\n", numbytes);
-		numbytes_sent += numbytes_read;
 	}
 
-	printf("sender: sent %d bytes\n", numbytes_sent);
+	printf("Sender: sent %lu bytes in total\n", first_sequence_num_notsent);
+	printf("Sender send_file_thread finished...\n");
 	pthread_exit(0);
 }
 
@@ -85,6 +84,54 @@ void *recv_ack_thread(void *param) {
 		printf("receive ack num: %lu\n", ack_num);
 	}
 
+	printf("Sender recv_ack_thread finished...\n");
+	pthread_exit(0);
+}
+
+void *read_file_thread(void *param) {
+
+	unsigned long next_byte_toread = 0; 
+	int numbytes_read;
+
+	packet* pck;
+
+	for (;;) {
+
+		if (next_byte_toread == file_size_in_bytes) {
+			break;
+		}
+
+		pck = (packet*) malloc(MAX_UDP + HEADER_SIZE);
+		memset(pck, '\0', MAX_UDP + HEADER_SIZE);
+
+		if (feof(fd)) {
+			break;
+		}
+
+		numbytes_read = fread(pck->data, sizeof(char), MAX_UDP, fd);
+		if (ferror(fd)) {
+			perror("Read error");
+			exit(3);
+		}
+
+		pck->sequence_num = next_byte_toread;
+		pck->packet_size = numbytes_read;
+		pck->file_size = file_size_in_bytes;
+
+		read_buffer.insert(std::pair<unsigned long, packet*> (next_byte_toread, pck));
+
+		if (!send_start) {
+			send_start = 1;
+		}
+
+		last_sequence_num_notsent = next_byte_toread;
+
+		next_byte_toread += numbytes_read;
+	}
+
+	
+
+	printf("Sender read_file_thread finished...\n");
 	pthread_exit(0);
 }
 
@@ -105,16 +152,18 @@ int main(int argc, char *argv[]) { // main function
 		exit(prepare_return);
 	}
 
-
+	pthread_t read_tid;
 	pthread_t send_tid;
 	pthread_t recv_tid;
 
 	pthread_attr_t attr;
 	pthread_attr_init(&attr);
 
+	pthread_create(&read_tid, &attr, read_file_thread, NULL);
 	pthread_create(&send_tid, &attr, send_file_thread, NULL);
 	pthread_create(&recv_tid, &attr, recv_ack_thread, NULL);
 
+	pthread_join(read_tid, NULL);
 	pthread_join(send_tid, NULL);
 	pthread_join(recv_tid, NULL);
 
