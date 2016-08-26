@@ -73,6 +73,15 @@ void *recv_file_thread(void *param) {
 			if (!recv_start) {
 				recv_start = 1;
 			}
+		} 
+		else if (pck->sequence_num < expected_sequence_num){ // temporarily, when recving packets not expected, 
+															// just discard them and echo expected sequence num as ack
+			send_ack();
+			free(pck);
+		}
+		else {
+			send_ack();
+			free(pck);
 		}
 		
 		numbytes_recved += pck->packet_size;

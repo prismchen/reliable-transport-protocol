@@ -9,6 +9,7 @@
 #include <arpa/inet.h>
 #include <netdb.h>
 #include <pthread.h>
+#include <time.h>
 #include <map>
 
 #include "data_struct.h"
@@ -23,14 +24,41 @@ int rv;
 FILE *fd; // file descriptor of the transfering file
 char *filename;
 
+unsigned long window = 10*MAX_UDP;
+
 int file_size_in_bytes;
 // unsigned long global_sequence_num = 0;
 unsigned long first_sequence_num_notsent = 0;
-volatile unsigned long last_sequence_num_notsent = 0; 
+unsigned long last_sequence_num_notsent = 0; 
+unsigned long largest_sequence_num_allowedtosend = window;
 unsigned long ack_num = 0;
 std::map<unsigned long, packet*> read_buffer;
 
+volatile double sample_rtt = 0.1;
+volatile clock_t timing_start, timing_end;
+volatile clock_t timeout_start, timeout_end;
 volatile int send_start = 0;
+volatile int is_timing = 0;
+volatile int is_timeout_running = 0;
+volatile int timeout = 0;
+volatile unsigned long timed_ack_num;
+
+double alpha = 0.25;
+
+
+void check_timeout() {
+	timeout_end = clock();
+	if ((double) (timeout_end - timeout_start)/CLOCKS_PER_SEC > 2.0 * sample_rtt) {
+		timeout = 1;
+	}
+	else {
+		timeout = 0;
+	};
+}
+
+void reset_timeout() {
+	timeout_start = clock();
+}
 
 void *send_file_thread(void *param) {
 
@@ -49,18 +77,50 @@ void *send_file_thread(void *param) {
 
 	for (;;) {
 		if(send_start) {
-			while (first_sequence_num_notsent <= last_sequence_num_notsent) {
-				it = read_buffer.find(first_sequence_num_notsent);
+			if (!timeout) {
+				while (first_sequence_num_notsent <= largest_sequence_num_allowedtosend && first_sequence_num_notsent <= last_sequence_num_notsent) {
+					it = read_buffer.find(first_sequence_num_notsent);
+					if (it != read_buffer.end()) {
+
+						pck = it->second;
+						buf_send_packet(pck);
+
+						if (!is_timeout_running) {
+							reset_timeout();
+							is_timeout_running = 1;
+						} 
+						else {
+							check_timeout();
+						}
+
+						if (!is_timing) {
+							timed_ack_num = pck->sequence_num + pck->packet_size;
+							timing_start = clock();
+							is_timing = 1;
+						}
+
+						first_sequence_num_notsent += pck->packet_size;
+					}
+					else {
+						perror("packet not found");
+						exit(1);
+					}
+					
+				}
+			}
+			else { // timeout! 
+				printf("Retransmitting packet %lu\n", ack_num);
+				it = read_buffer.find(ack_num);
 				if (it != read_buffer.end()) {
 					pck = it->second;
 					buf_send_packet(pck);
-					first_sequence_num_notsent += pck->packet_size;
+					reset_timeout();
 				}
 				else {
 					perror("packet not found");
 					exit(1);
 				}
-				
+				check_timeout();
 			}
 		}
 
@@ -76,12 +136,25 @@ void *send_file_thread(void *param) {
 
 void *recv_ack_thread(void *param) {
 
+	unsigned long old_ack_num = ack_num;
+
 	for (;;) {
 		if (ack_num == file_size_in_bytes) {
 			break;
 		}
 		ack_num = recv_ack();
-		printf("receive ack num: %lu\n", ack_num);
+		if (is_timing && timed_ack_num == ack_num) {
+			timing_end = clock();
+			sample_rtt = sample_rtt*(1 - alpha) + alpha* (double) (timing_end - timing_start)/CLOCKS_PER_SEC;
+			// printf("sample_rtt is: %f\n", sample_rtt);
+			is_timing = 0;
+		}
+		if (ack_num > old_ack_num) {
+			reset_timeout();
+			old_ack_num = ack_num;
+		} 
+		largest_sequence_num_allowedtosend = ack_num + window;
+		// printf("receive ack num: %lu\n", ack_num);
 	}
 
 	printf("Sender recv_ack_thread finished...\n");
