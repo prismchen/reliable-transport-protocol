@@ -24,8 +24,8 @@ unsigned long *ack_buf = (unsigned long*) malloc(sizeof(unsigned long));
 struct sockaddr remote_addr;
 socklen_t remote_addr_len = sizeof remote_addr;
 
-int get_file_size(const char* filename) {
-	int size;
+unsigned long get_file_size(const char* filename) {
+	unsigned long size;
 	FILE *f;
 
 	f = fopen(filename, "rb");
