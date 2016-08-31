@@ -24,8 +24,8 @@ unsigned long *ack_buf = (unsigned long*) malloc(sizeof(unsigned long));
 struct sockaddr remote_addr;
 socklen_t remote_addr_len = sizeof remote_addr;
 
-int get_file_size(const char* filename) {
-	int size;
+unsigned long get_file_size(const char* filename) {
+	unsigned long size;
 	FILE *f;
 
 	f = fopen(filename, "rb");
@@ -37,7 +37,7 @@ int get_file_size(const char* filename) {
     return size;
 }
 
-int buf_send(char *buf) {
+int send_buf(char *buf) {
 
 	int numbytes;
 	if ((numbytes = sendto(sockfd, buf, strlen(buf), 0, p->ai_addr, p->ai_addrlen)) == -1) {
@@ -47,7 +47,19 @@ int buf_send(char *buf) {
 	return numbytes;
 } 
 
-void buf_send_packet(packet* pck) {
+int recv_to_buf(char *buf) {
+	int numbytes;
+	if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN , 0, &remote_addr, &remote_addr_len)) == -1) {
+		// nothing
+	}
+	else {
+		buf[numbytes] = '\0';
+	}
+	return numbytes;
+}
+
+
+void send_packet(packet* pck) {
 	if (sendto(sockfd, pck, sizeof *pck, 0, p->ai_addr, p->ai_addrlen) == -1) {
 		perror("sender: sendto");
 		exit(1);
@@ -57,8 +69,11 @@ void buf_send_packet(packet* pck) {
 unsigned long recv_ack() {
 	int recv_len;
 	recv_len = recvfrom(sockfd, ack_buf, sizeof ack_buf, 0, &remote_addr, &remote_addr_len);
+	if (recv_len == -1) {
+		perror("recvfrom timeout");
+		exit(1);
+	}
 	if (recv_len != sizeof(unsigned long)) {
-		printf("%d\n", recv_len);
 		perror("recv_ack");
 		exit(1);
 	}

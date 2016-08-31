@@ -5,8 +5,9 @@
 #define MAXBUFLEN 256
 
 void *get_in_addr(struct sockaddr *sa);
-int buf_recv(char *buf); 
-packet *buf_recv_packet();
+int send_buf(char *buf);
+int recv_to_buf(char *buf); 
+packet *recv_packet();
 void send_ack();
 void write_to_file(packet *pck);
 int prepare();

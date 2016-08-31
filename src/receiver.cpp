@@ -26,7 +26,7 @@ struct sockaddr_storage their_addr;
 socklen_t addr_len;
 FILE *fd;
 
-int file_size_in_bytes = 1; // cannot use 0 or not initializing
+unsigned long file_size_in_bytes = 1; // cannot use 0 or not initializing
 
 volatile unsigned long last_writable_sequence_num = 0;
 unsigned long first_writable_sequence_num = 0; 
@@ -36,8 +36,8 @@ volatile int recv_start = 0;
 
 void *recv_file_thread(void *param) {
 
-	int numbytes_recved = 0;
 	char buf[MAXBUFLEN];
+	std::map<unsigned long, packet*> :: iterator it;
 
 	int prepare_return;
 	if ((prepare_return = prepare()) != 0) {
@@ -46,27 +46,32 @@ void *recv_file_thread(void *param) {
 	}
 
 	// receive file name
-	buf_recv(buf);
+	recv_to_buf(buf);
 	fd = fopen(buf, "w");
 
-	// receive number of bytes
-	buf_recv(buf);
-	file_size_in_bytes = atoi(buf);
-	printf("Number of bytes expected to receive %d\n", file_size_in_bytes);
+	send_buf(buf);
 
 	packet *pck;
 	for (;;) {
 		if (expected_sequence_num == file_size_in_bytes) {
 			break;
 		}
-		pck = buf_recv_packet();
-
+		pck = recv_packet();
+		if (file_size_in_bytes == 1) {
+			file_size_in_bytes = pck->file_size;
+		}
 		// printf("Received a packet with sequence_num %lu and size is %lu\n", pck->sequence_num, pck->packet_size);
 		if (pck->sequence_num == expected_sequence_num) {
 			write_buffer.insert(std::pair<unsigned long, packet*> (pck->sequence_num, pck));
-			last_writable_sequence_num = expected_sequence_num;
 
-			expected_sequence_num += pck->packet_size;
+			for (;;) {
+				it = write_buffer.find(expected_sequence_num);
+				if (it == write_buffer.end()) {
+					break;
+				}
+				last_writable_sequence_num = expected_sequence_num;
+				expected_sequence_num += it->second->packet_size;
+			} 	
 
 			send_ack();
 
@@ -76,20 +81,22 @@ void *recv_file_thread(void *param) {
 		} 
 		else if (pck->sequence_num < expected_sequence_num){ // temporarily, when recving packets not expected, 
 															// just discard them and echo expected sequence num as ack
+			free(pck);										
 			send_ack();
-			free(pck);
 		}
 		else {
+			it = write_buffer.find(pck->sequence_num);
+			if (it == write_buffer.end()) {
+				write_buffer.insert(std::pair<unsigned long, packet*> (pck->sequence_num, pck));
+			}
+			else {
+				free(pck);
+			}
 			send_ack();
-			free(pck);
 		}
-		
-		numbytes_recved += pck->packet_size;
-		
 	}
 
-	printf("Received %d bytes in total\n", numbytes_recved);
-
+	printf("Received %lu bytes in total\n", expected_sequence_num);
 	printf("Reciver recv_thread finished...\n");
 	pthread_exit(0);
 }
@@ -103,10 +110,8 @@ void *write_file_thread(void *param) {
 				if (it != write_buffer.end()) {
 					write_to_file(it->second);
 					first_writable_sequence_num += it->second->packet_size;
-				}
-				else {
-					perror("packet lost");
-					exit(5);
+					// if (it->second != NULL) free(it->second);
+					// write_buffer.erase(it);
 				}
 			}
 		}

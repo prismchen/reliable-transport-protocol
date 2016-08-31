@@ -29,24 +29,33 @@ void *get_in_addr(struct sockaddr *sa) { // get sockaddr, IPv4 or IPv6:
 	return &(((struct sockaddr_in6*)sa)->sin6_addr);
 }
 
-int buf_recv(char *buf) {
+int send_buf(char *buf) {
+
+	int numbytes;
+	if ((numbytes = sendto(sockfd, buf, strlen(buf), 0, (struct sockaddr *) &their_addr, addr_len)) == -1) {
+		perror("sender: sendto");
+		exit(1);
+	}
+	return numbytes;
+} 
+
+int recv_to_buf(char *buf) {
 	int numbytes;
 	if ((numbytes = recvfrom(sockfd, buf, MAXBUFLEN , 0,
 		(struct sockaddr *)&their_addr, &addr_len)) == -1) {
-		perror("recvfrom");
+		perror("recv_to_buf");
 		exit(1);
 	}
 	buf[numbytes] = '\0';
 	return numbytes;
 }
 
-packet *buf_recv_packet() {
+packet *recv_packet() {
 	packet* pck = (packet*) malloc(MAX_UDP + HEADER_SIZE);
 	memset(pck, '\0', MAX_UDP + HEADER_SIZE);
 
-	if (recvfrom(sockfd, pck, MAX_UDP + HEADER_SIZE , 0,
-		(struct sockaddr *)&their_addr, &addr_len) == -1) {
-		perror("buf_recv_packet");
+	if (recvfrom(sockfd, pck, MAX_UDP + HEADER_SIZE , 0, (struct sockaddr *)&their_addr, &addr_len) == -1) {
+		perror("recv_packet");
 		exit(1);
 	}
 	return pck;
