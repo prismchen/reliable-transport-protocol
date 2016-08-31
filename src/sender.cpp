@@ -56,31 +56,30 @@ double alpha = 0.5;
 double beta = 0.25; 
 
 void set_cwnd(unsigned long size) {
-	cwnd = size;
-	largest_sequence_num_allowedtosend = ack_num + cwnd;
+    cwnd = size;
+    largest_sequence_num_allowedtosend = ack_num + cwnd;
 }
 
 void check_timeout() {
-	// printf("%f and %f\n", (double) (timeout_end - timeout_start)/CLOCKS_PER_SEC, 2.0 * estimated_rtt);
-	if (((double) clock() - timeout_start)/CLOCKS_PER_SEC > timeout_interval) {
-		dup_ack_count = 0;
-		ssthresh = cwnd/2;
-		set_cwnd(MAX_UDP);
-		sender_state = SLOW_START;
-		timeout = 1;
+    if (((double) clock() - timeout_start)/CLOCKS_PER_SEC > timeout_interval) {
+	dup_ack_count = 0;
+	ssthresh = cwnd/2;
+	set_cwnd(MAX_UDP);
+	sender_state = SLOW_START;
+	timeout = 1;
 	}
-	else {
-		timeout = 0;
-	};
+    else {
+	timeout = 0;
+    };
 }
 
 void reset_timeout() {
-	timeout_start = clock();
+    timeout_start = clock();
 }
 
 void *send_file_thread(void *param) {
 
-	struct timeval sock_timeout;      
+    struct timeval sock_timeout;      
     sock_timeout.tv_sec = 1;
     sock_timeout.tv_usec = 0;
 
