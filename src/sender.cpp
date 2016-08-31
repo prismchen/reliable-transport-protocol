@@ -67,7 +67,7 @@ void check_timeout() {
 	set_cwnd(MAX_UDP);
 	sender_state = SLOW_START;
 	timeout = 1;
-	}
+    }
     else {
 	timeout = 0;
     };
