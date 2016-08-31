@@ -58,7 +58,6 @@ double beta = 0.25;
 void set_cwnd(unsigned long size) {
 	cwnd = size;
 	largest_sequence_num_allowedtosend = ack_num + cwnd;
-	// printf("State: %d cwnd/MAX_UDP : %lu\n", sender_state, cwnd/MAX_UDP);
 }
 
 void check_timeout() {
