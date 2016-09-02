@@ -30,11 +30,11 @@ unsigned long get_file_size(const char* filename) {
 
 	f = fopen(filename, "rb");
 	if (f == NULL) return -1;
-    fseek(f, 0, SEEK_END);
-    size = ftell(f);
-    fclose(f);
+	fseek(f, 0, SEEK_END);
+	size = ftell(f);
+	fclose(f);
 
-    return size;
+	return size;
 }
 
 int send_buf(char *buf) {

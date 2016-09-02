@@ -56,36 +56,36 @@ double alpha = 0.5;
 double beta = 0.25; 
 
 void set_cwnd(unsigned long size) {
-    cwnd = size;
-    largest_sequence_num_allowedtosend = ack_num + cwnd;
+	cwnd = size;
+	largest_sequence_num_allowedtosend = ack_num + cwnd;
 }
 
 void check_timeout() {
-    if (((double) clock() - timeout_start)/CLOCKS_PER_SEC > timeout_interval) {
+	if (((double) clock() - timeout_start)/CLOCKS_PER_SEC > timeout_interval) {
 	dup_ack_count = 0;
 	ssthresh = cwnd/2;
 	set_cwnd(MAX_UDP);
 	sender_state = SLOW_START;
 	timeout = 1;
-    }
-    else {
+	}
+	else {
 	timeout = 0;
-    };
+	};
 }
 
 void reset_timeout() {
-    timeout_start = clock();
+	timeout_start = clock();
 }
 
 void *send_file_thread(void *param) {
 
-    struct timeval sock_timeout;      
-    sock_timeout.tv_sec = 1;
-    sock_timeout.tv_usec = 0;
+	struct timeval sock_timeout;	  
+	sock_timeout.tv_sec = 1;
+	sock_timeout.tv_usec = 0;
 
-    if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&sock_timeout, sizeof sock_timeout) < 0) {
-        perror("setsockopt failed\n");
-    }
+	if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&sock_timeout, sizeof sock_timeout) < 0) {
+		perror("setsockopt failed\n");
+	}
 
 	char buf[MAXBUFLEN];
 	memset(buf, '\0', MAXBUFLEN);
