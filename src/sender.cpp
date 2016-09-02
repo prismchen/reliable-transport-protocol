@@ -1,3 +1,6 @@
+/**
+	@author Xiao Chen
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -25,11 +28,11 @@ int rv;
 FILE *fd; // file descriptor of the transfering file
 char *filename;
 
-unsigned long cwnd = 1*MAX_UDP;
-unsigned long ssthresh = 64000;
-int dup_ack_count = 0;
+unsigned long cwnd = 1*MAX_UDP; // Congestion window, initialized as 1 packet
+unsigned long ssthresh = 64000; // Slow start threshold, initialized as 64 kB
+int dup_ack_count = 0; // count for duplicate acknowledge number
 
-unsigned long file_size_in_bytes;
+unsigned long file_size_in_bytes; // size of transferring file
 unsigned long first_sequence_num_notsent = 0;
 unsigned long last_sequence_num_notsent = 0; 
 unsigned long largest_sequence_num_allowedtosend = cwnd;
@@ -37,29 +40,37 @@ unsigned long ack_num = 0;
 std::map<unsigned long, packet*> read_buffer;
 
 
-volatile double estimated_rtt = 0.1;
-volatile double dev_rtt = 0.0;
-volatile double timeout_interval = estimated_rtt;
+volatile double estimated_rtt = 0.1; // estimated rtt, initialized as 0.1 second
+volatile double dev_rtt = 0.0; // deviation of rtt
+volatile double timeout_interval = estimated_rtt; // interval for timeout, in sec
 
-volatile clock_t timing_start;
-volatile clock_t timeout_start;
-volatile unsigned long timed_ack_num;
+volatile clock_t timeout_start; // moment of start timeout
+volatile clock_t timing_start; // moment of start timing to measure rtt
+volatile unsigned long timed_ack_num; // acknowledge number to end measuring rtt
 
-volatile int sender_state = SLOW_START;
-volatile int send_start = 0;
-volatile int recv_start = 0;
-volatile int is_timing = 0;
+volatile int sender_state = SLOW_START; // state of sender program, initialized as SLOW_START
+volatile int send_start = 0; // signal to start sending packets
+volatile int recv_start = 0; // signal to start receiving acknowledge number 
+volatile int is_timing = 0; 
 volatile int is_timeout_running = 0;
-volatile int timeout = 0;
+volatile int timeout = 0; // is the transferring timeout
 
-double alpha = 0.5;
-double beta = 0.25; 
+double alpha = 0.5; // parameter for estimating rtt
+double beta = 0.25; // parameter for estimating rtt's deviation
 
+
+/**
+	Set the congestion window to size
+	@param size the target size for cwnd
+*/
 void set_cwnd(unsigned long size) {
 	cwnd = size;
 	largest_sequence_num_allowedtosend = ack_num + cwnd;
 }
 
+/**
+	Check if transfer is timeout. If timeout, set timeout = 1 and sender_state = SLOW_START
+*/
 void check_timeout() {
 	if (((double) clock() - timeout_start)/CLOCKS_PER_SEC > timeout_interval) {
 	dup_ack_count = 0;
@@ -73,16 +84,23 @@ void check_timeout() {
 	};
 }
 
+/**
+	Reset the clock for timeout
+*/
 void reset_timeout() {
 	timeout_start = clock();
 }
 
+/**
+	Function of thread for sending packet
+*/
 void *send_file_thread(void *param) {
 
 	struct timeval sock_timeout;	  
 	sock_timeout.tv_sec = 1;
 	sock_timeout.tv_usec = 0;
 
+	// set socket timeout as 1 sec
 	if (setsockopt (sockfd, SOL_SOCKET, SO_RCVTIMEO, (char *)&sock_timeout, sizeof sock_timeout) < 0) {
 		perror("setsockopt failed\n");
 	}
@@ -90,7 +108,7 @@ void *send_file_thread(void *param) {
 	char buf[MAXBUFLEN];
 	memset(buf, '\0', MAXBUFLEN);
 
-	// Send file name to receiver 
+	// Hand shaking: send file name to receiver and check if the echo is same as what is sent
 	for (;;) {
 		send_buf(filename);
 		printf("Waiting for ack of filename...\n");
@@ -121,11 +139,9 @@ void *send_file_thread(void *param) {
 					send_packet(pck);
 
 					usleep(0.5*estimated_rtt);
-
-					// printf("Fast retransmitting packet %lu\n", ack_num);
 				}
 			}
-			else {
+			else { // send all packets withing congestion window
 				while (first_sequence_num_notsent <= largest_sequence_num_allowedtosend && first_sequence_num_notsent <= last_sequence_num_notsent) {
 					it = read_buffer.find(first_sequence_num_notsent);
 					if (it != read_buffer.end()) {
@@ -138,8 +154,6 @@ void *send_file_thread(void *param) {
 
 						pck = it->second;
 						send_packet(pck);
-
-						// printf("Send packet with sequence_num %lu\n", pck->sequence_num);
 
 						if (!is_timeout_running) {
 							reset_timeout();
@@ -159,8 +173,6 @@ void *send_file_thread(void *param) {
 				pck = it->second;
 				send_packet(pck);
 
-				// printf("Retransmitting packet %lu\n", ack_num);
-
 				reset_timeout();
 			}
 			else {
@@ -169,7 +181,7 @@ void *send_file_thread(void *param) {
 		}
 		check_timeout();
 
-		if (ack_num == file_size_in_bytes) {
+		if (ack_num == file_size_in_bytes) { // end of thread, all packets acknowledged
 			break;
 		}
 	}
@@ -179,6 +191,9 @@ void *send_file_thread(void *param) {
 	pthread_exit(0);
 }
 
+/**
+	Function of thread for receiving acknowledge number from receiver program	
+*/
 void *recv_ack_thread(void *param) {
 
 	unsigned long old_ack_num = ack_num;
@@ -187,18 +202,17 @@ void *recv_ack_thread(void *param) {
 	while (!recv_start) {}
 
 	for (;;) {
-		if (ack_num == file_size_in_bytes) {
+		if (ack_num == file_size_in_bytes) { // end of thread, all packets acknowledged
 			break;
 		}
 		ack_num = recv_ack();
 
-		if (is_timing && timed_ack_num <= ack_num) {
+		if (is_timing && timed_ack_num <= ack_num) { // rtt estimating
 			sample_rtt = ((double) clock() - timing_start)/CLOCKS_PER_SEC;
 			estimated_rtt = (1.0 - alpha)*estimated_rtt + alpha*sample_rtt;
 			dev_rtt = (1.0 - beta)*dev_rtt + beta*(std::abs(estimated_rtt - sample_rtt));
 			timeout_interval = estimated_rtt + 4 * dev_rtt;
 			is_timing = 0;
-			// printf("estimated_rtt is: %f ms\n", estimated_rtt * 1000);
 		}
 
 		if (ack_num > old_ack_num) { // new ack
@@ -231,7 +245,7 @@ void *recv_ack_thread(void *param) {
 				exit(1);
 			}
 		} 
-		else if (ack_num == old_ack_num) { // duplicate ack
+		else if (ack_num == old_ack_num) { // duplicate acks
 			dup_ack_count++;
 			if (dup_ack_count == 3 && sender_state != FAST_RECOVERY) {
 				sender_state = FAST_RECOVERY;
@@ -252,6 +266,9 @@ void *recv_ack_thread(void *param) {
 	pthread_exit(0);
 }
 
+/** 
+	Function of thread for reading the transferring file and put its content into read_buffer to be sent in future
+*/
 void *read_file_thread(void *param) {
 
 	unsigned long next_byte_toread = 0; 
@@ -261,7 +278,7 @@ void *read_file_thread(void *param) {
 
 	for (;;) {
 
-		if (next_byte_toread == file_size_in_bytes) {
+		if (next_byte_toread == file_size_in_bytes) { // end of thread, all packets read
 			break;
 		}
 
@@ -293,8 +310,6 @@ void *read_file_thread(void *param) {
 		next_byte_toread += numbytes_read;
 	}
 
-	
-
 	printf("Sender read_file_thread finished...\n");
 	pthread_exit(0);
 }
@@ -312,12 +327,7 @@ int main(int argc, char *argv[]) { // main function
 	filename = argv[2];
 	file_size_in_bytes = get_file_size(argv[2]); // number of bytes in file
 
-
-	int prepare_return;
-	if ((prepare_return = connect_prepare(argv[1])) != 0) {
-		perror("connect_prepare failed");
-		exit(prepare_return);
-	}
+	connect_prepare(argv[1]);
 
 	pthread_t read_tid;
 	pthread_t send_tid;

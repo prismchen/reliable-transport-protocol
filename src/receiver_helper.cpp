@@ -1,3 +1,6 @@
+/**
+	@author Xiao Chen
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -18,7 +21,6 @@ extern int rv;
 extern struct sockaddr_storage their_addr;
 extern socklen_t addr_len;
 extern FILE *fd;
-
 extern unsigned long expected_sequence_num;
 
 void *get_in_addr(struct sockaddr *sa) { // get sockaddr, IPv4 or IPv6:
@@ -73,11 +75,14 @@ void write_to_file(packet *pck) {
 	fwrite(pck->data, 1, pck->packet_size, fd);
 	if (ferror(fd)) {
 		perror("write_to_file");
-		exit(4);
+		exit(1);
 	}
 }
 
-int prepare() {
+/**
+	Set up socket
+*/
+void prepare() {
 
 	memset(&hints, 0, sizeof hints);
 	hints.ai_family = AF_UNSPEC; // set to AF_INET to force IPv4
@@ -86,7 +91,7 @@ int prepare() {
 
 	if ((rv = getaddrinfo(NULL, MYPORT, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-		return 1;
+		exit(1);
 	}
 
 	// loop through all the results and bind to the first we can
@@ -108,14 +113,12 @@ int prepare() {
 
 	if (p == NULL) {
 		fprintf(stderr, "receiver: failed to bind socket\n");
-		return 2;
+		exit(1);
 	}
 
-	addr_len = sizeof their_addr; // You must also initialize fromlen to be the size of from or struct sockaddr
+	addr_len = sizeof their_addr;
 
 	printf("receiver: waiting to recvfrom...\n");
-
-	return 0;
 }
 
 void clean_up() {

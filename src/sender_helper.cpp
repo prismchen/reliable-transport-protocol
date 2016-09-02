@@ -1,3 +1,6 @@
+/**
+	@author Xiao Chen
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -80,7 +83,10 @@ unsigned long recv_ack() {
 	return *ack_buf;
 }
 
-int connect_prepare(char *ip) {
+/**
+	Set up socket
+*/
+void connect_prepare(char *ip) {
 
 	fd = fopen(filename, "r");
 
@@ -90,7 +96,7 @@ int connect_prepare(char *ip) {
 
 	if ((rv = getaddrinfo(ip, SERVERPORT, &hints, &servinfo)) != 0) {
 		fprintf(stderr, "getaddrinfo: %s\n", gai_strerror(rv));
-		return 1;
+		exit(1);
 	}
 
 	// loop through all the results and make a socket
@@ -106,10 +112,8 @@ int connect_prepare(char *ip) {
 
 	if (p == NULL) {
 		fprintf(stderr, "sender: failed to create socket\n");
-		return 2;
+		exit(1);
 	}
-
-	return 0;
 }
 
 void clean_up() {

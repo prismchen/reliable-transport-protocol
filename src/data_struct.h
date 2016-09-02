@@ -1,8 +1,11 @@
+/**
+	@author Xiao Chen
+*/
 #ifndef __DATA_STRUCT__
 #define __DATA_STRUCT__
 
-#define MAX_UDP 1448
-#define HEADER_SIZE 24 // 3 x unsigned long
+#define MAX_UDP 1448 // size of data carried in each packet
+#define HEADER_SIZE 24 // size of packet header: 3 x unsigned long
 
 typedef struct packet
 {

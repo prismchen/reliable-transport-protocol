@@ -1,3 +1,6 @@
+/**
+	@author Xiao Chen
+*/
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
@@ -26,24 +29,23 @@ struct sockaddr_storage their_addr;
 socklen_t addr_len;
 FILE *fd;
 
-unsigned long file_size_in_bytes = 1; // cannot use 0 or not initializing
-
 volatile unsigned long last_writable_sequence_num = 0;
+volatile int recv_start = 0;
+unsigned long file_size_in_bytes = 1;
 unsigned long first_writable_sequence_num = 0; 
 unsigned long expected_sequence_num = 0;
 std::map<unsigned long, packet*> write_buffer;
-volatile int recv_start = 0;
 
+/**
+	Function of thread for handling incoming packet and sending back acknowledgement, indicating the expected sequence number 
+	from the sender program. It insert each packet received into write_buffer to be read by other thread.
+*/
 void *recv_file_thread(void *param) {
 
 	char buf[MAXBUFLEN];
 	std::map<unsigned long, packet*> :: iterator it;
 
-	int prepare_return;
-	if ((prepare_return = prepare()) != 0) {
-		perror("prepare failed");
-		exit(prepare_return);
-	}
+	prepare();
 
 	// receive file name
 	recv_to_buf(buf);
@@ -60,7 +62,6 @@ void *recv_file_thread(void *param) {
 		if (file_size_in_bytes == 1) {
 			file_size_in_bytes = pck->file_size;
 		}
-		// printf("Received a packet with sequence_num %lu and size is %lu\n", pck->sequence_num, pck->packet_size);
 		if (pck->sequence_num == expected_sequence_num) {
 			write_buffer.insert(std::pair<unsigned long, packet*> (pck->sequence_num, pck));
 
@@ -101,6 +102,9 @@ void *recv_file_thread(void *param) {
 	pthread_exit(0);
 }
 
+/**
+	Function of thread for writing packets received into a file, it retreives packets from write_buffer
+*/
 void *write_file_thread(void *param) {
 	std::map<unsigned long, packet*> :: iterator it;
 	for (;;) {
@@ -110,8 +114,6 @@ void *write_file_thread(void *param) {
 				if (it != write_buffer.end()) {
 					write_to_file(it->second);
 					first_writable_sequence_num += it->second->packet_size;
-					// if (it->second != NULL) free(it->second);
-					// write_buffer.erase(it);
 				}
 			}
 		}
